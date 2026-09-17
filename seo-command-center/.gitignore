@@ -1,0 +1,11 @@
+# Per-agency data stays local
+clients/*
+!clients/README.md
+prospects/*
+!prospects/README.md
+.DS_Store
+__pycache__/
+
+# Agency settings and pipeline are private local state
+config.md
+DASHBOARD.md

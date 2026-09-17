@@ -1,0 +1,23 @@
+# Installed packages and generated work
+node_modules/
+__pycache__/
+*.pyc
+audit/
+outputs/
+.playwright-cli/
+# Client state
+clients/*
+!clients/README.md
+prospects/*
+!prospects/README.md
+# Credentials and browser login state
+.env
+.env.*
+!.env.example
+*.key
+*.pem
+**/*auth.json
+**/storage-state*.json
+.mcp.json
+# Local editor/OS state
+.DS_Store
