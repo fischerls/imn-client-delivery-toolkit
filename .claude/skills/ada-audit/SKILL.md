@@ -1,6 +1,7 @@
 ---
 name: ada-audit
-description: "Audit website accessibility against WCAG 2.2 A/AA using axe-core, browser probes, and documented manual checks. Use for an ADA accessibility review, WCAG audit, launch accessibility check, or remediation retest. Reports confirmed findings, unresolved checks, and tested scope; does not determine legal ADA compliance."
+description: Audit website accessibility against WCAG 2.2 A/AA using axe-core, browser probes, and documented manual checks. Use for an ADA accessibility review, WCAG audit, launch accessibility check, or remediation retest. Reports confirmed findings, unresolved checks, and tested scope; does not determine legal ADA compliance.
+argument-hint: "[url] [--limit 40] [--all] [--settle 2500] [--retest]"
 ---
 
 # Website accessibility audit
@@ -25,6 +26,14 @@ npx playwright install chromium
 
 Run scripts with explicit output paths under the project audit directory. In this vault use `Projects/{bucket}/{slug}/audit/`; standalone use `./audit/`. Create the output directory first. Do not save scan outputs in the skill folder or vault root.
 
+## Arguments
+
+`$ARGUMENTS`, all optional. With none, the skill runs as written.
+- `[url]`: the target URL.
+- `--limit N` or `--all`: passed to `discover.mjs`. Default 40 pages.
+- `--settle MS`: passed to `sweep.mjs`. Default 2500.
+- `--retest`: run only workflow step 5 against the latest report in the project's `audit/` folder.
+
 ## Workflow
 
 1. **Discover and select scope.**
@@ -37,6 +46,10 @@ Run scripts with explicit output paths under the project audit directory. In thi
    Compare and merge the URL lists, then add critical journeys and distinct content manually. No automatic template grouping occurs. Each command writes a `.coverage.json` sidecar with limits, omitted/pending URLs, exclusions, and errors. A sitemap/crawl discrepancy requires investigation; it does not automatically establish an SEO defect.
 
    `--all` removes the default 40-page cap, but an explicit `--limit` still applies. `--max-requests` defaults to 300. Read truncation and error data before claiming coverage. Discovery exit codes are 0 for an exhausted discovery pass, 2 for blocked/error or empty results, and 3 for truncation; 2 takes precedence. Read the coverage sidecar even on a nonzero exit. Even exhausted discovery is not proof of a complete site inventory. Redirects stay on the exact selected origin; use the canonical URL or explicitly audit a separately authorized origin when needed.
+
+   Pick the journeys yourself as written, and record them under Scope and method. Only when the request did not set scope AND the site has more candidate journeys than you can cover, confirm with one AskUserQuestion form. No form available, or fewer than 2 candidates: take your pick and record it.
+   - Header `Journeys`, multiSelect: up to 4 complete journeys found on the site (quote request, booking, mobile menu to a service, checkout), the primary lead or sale path first with `(Recommended)`.
+   - Header `Submissions`: `Stop before submit (Recommended)` or `Test environment` (URL via Other). Live submission is never a form option.
 
 2. **Run the automated screen.**
 
@@ -51,6 +64,8 @@ Run scripts with explicit output paths under the project audit directory. In thi
    Exit codes: **0** no automated findings or unresolved automated candidates; **1** axe A/AA findings; **2** blocked pages or execution errors; **3** unresolved review candidates without confirmed findings. Code 2 takes precedence over 1, then 3. Every code still requires the manual layer. `verdict.fail` is `true` for detected A/AA failures, `null` when unresolved without confirmed failures, and `false` only for a completed screen with no automated findings. Consult status and coverage as well as the boolean.
 
 3. **Complete the manual layer.** Read `references/manual-layer.md`. Build its criterion coverage matrix and test applicable interactions. Use PASS, FAIL, NEEDS REVIEW, NOT TESTED, or NOT APPLICABLE with evidence and reasons. If screen-reader testing or another required check cannot be performed, record it as outstanding. Never invent a manual pass.
+
+   With 2+ journeys in scope, fan out the interaction procedure: one `general-purpose` Agent per journey, max 5, all in one message. Each gets its journey, URLs and states, the submission decision, `references/manual-layer.md`, and its own headless Playwright browser (never a shared browser session). Each returns coverage-matrix rows only: criterion, state, outcome, reproduction steps, evidence path. Agents do not ask the requester anything, do not submit past the decision, do not record a PASS they did not test, and do not write the report. The main thread merges the rows, evaluates cross-page criteria (3.2.3, 3.2.4, 3.2.6) itself, and writes the report.
 
 4. **Write the scoped report.** Follow `references/report-format.md`. Confirm scanner findings and exceptions, distinguish A/AA failures from best practices and AAA checks, prioritize barriers to key tasks, and retain evidence. Report failed/blocked tests separately from accessibility violations.
 
